@@ -171,7 +171,12 @@ def _python_tools(source: str) -> list[ToolDef]:
             props[arg.arg] = {"title": arg.arg.replace("_", " ").title(), **_annotation_schema(arg.annotation)}
             if i < defaults_start:
                 required.append(arg.arg)
-        schema: dict[str, Any] = {"type": "object", "properties": props}
+            else:
+                default = node.args.defaults[i - defaults_start]
+                if isinstance(default, ast.Constant):
+                    props[arg.arg]["default"] = default.value
+        # Mirror FastMCP's generated schema so static and live manifests hash identically.
+        schema: dict[str, Any] = {"type": "object", "properties": props, "title": f"{node.name}Arguments"}
         if required:
             schema["required"] = required
         tools.append(ToolDef(name=name, description=description.strip(), inputSchema=schema))

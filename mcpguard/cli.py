@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 import asyncio
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 import typer
@@ -28,13 +28,13 @@ SEV_STYLE = {"CRITICAL": "bold white on red", "HIGH": "bold red", "MEDIUM": "yel
 VERDICT_STYLE = {"PASS": "bold green", "WARN": "bold yellow", "FAIL": "bold red"}
 
 
-class ReportFormat(str, Enum):
+class ReportFormat(StrEnum):
     md = "md"
     json = "json"
     sarif = "sarif"
 
 
-class SandboxMode(str, Enum):
+class SandboxMode(StrEnum):
     auto = "auto"
     docker = "docker"
     static = "static"

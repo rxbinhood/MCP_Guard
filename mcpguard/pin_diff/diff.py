@@ -110,4 +110,7 @@ def diff_manifests(old: Manifest, new: Manifest) -> ManifestDiff:
     if result.removed:
         bits.append(f"{len(result.removed)} removed ({', '.join(result.removed)})")
     result.summary = "Tool definitions changed since pin: " + "; ".join(bits) + "."
+    if old.method != new.method:
+        result.summary += (f" Note: pinned via {old.method} but verified via {new.method}; "
+                           "static extraction can differ slightly from the live manifest.")
     return result
