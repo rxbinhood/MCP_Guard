@@ -16,7 +16,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from mcpguard.evaluation import evaluate_servers  # noqa: E402
 from mcpguard.findings import Manifest  # noqa: E402
+from mcpguard.ingest.sandbox import docker_status  # noqa: E402
 from mcpguard.ingest.manifest import fetch_manifest  # noqa: E402
 from mcpguard.ingest.source import resolve  # noqa: E402
 from mcpguard.pin_diff.canonical import fingerprint  # noqa: E402
@@ -24,6 +26,8 @@ from mcpguard.pipeline import ScanOptions, run_scan  # noqa: E402
 
 DAY = 86_400
 # (server, ages in days for history copies). The first age is the "real" latest scan.
+# The two vulnerable servers are also probed dynamically when Docker is available.
+DYNAMIC = {"vuln_shell", "poisoned_weather"}
 PLAN = [
     ("clean_calc", [0.05, 3.2, 9.4]),
     ("clean_notes", [0.08, 5.1]),
@@ -45,7 +49,8 @@ async def main() -> None:
     for server, ages in PLAN:
         target = str(ROOT / "test_servers" / server)
         events: list[dict] = []
-        result = await run_scan(target, ScanOptions(), emit=events.append)
+        dynamic = server in DYNAMIC and docker_status()[0]
+        result = await run_scan(target, ScanOptions(dynamic=dynamic), emit=events.append)
         print(f"{server:<18} {result.verdict.value} risk={result.risk_score} findings={len(result.findings)}")
         for e in events:  # don't ship this machine's absolute paths in the seed
             for k in ("message", "detail", "target"):
@@ -65,8 +70,13 @@ async def main() -> None:
     pins = [{"target": "test_servers/rugpull_todo", "server_name": manifest.server_name,
              "server_version": manifest.server_version, "manifest_hash": whole, "tool_hashes": per_tool,
              "manifest": manifest.model_dump(mode="json"), "age_seconds": 0.5 * DAY}]
+    print("evaluating test servers...")
+    evaluation = {"descriptions": {"available": False, "reason": "tests/description_samples.json not provided"},
+                  "servers": await evaluate_servers()}
+    for row in evaluation["servers"]:
+        row["scan_id"] = f"demo-{row['server']}-0"  # link to the seeded scan
     out = ROOT / "mcpguard" / "api" / "seed_data.json"
-    out.write_text(json.dumps({"scans": scans, "pins": pins}, indent=1), encoding="utf-8")
+    out.write_text(json.dumps({"scans": scans, "pins": pins, "eval": evaluation}, indent=1), encoding="utf-8")
     print(f"wrote {out} ({len(scans)} scans, {len(pins)} pins)")
 
 

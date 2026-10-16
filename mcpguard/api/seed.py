@@ -59,5 +59,10 @@ def seed_if_empty(db: Database) -> bool:
         target = _rebase_target(pin["target"])
         db.upsert_pin({**pin, "target": target, "server_key": normalize_key(target),
                        "pinned_at": now - pin["age_seconds"], "last_verified_at": None, "last_status": "pinned"})
+    if data.get("eval"):
+        from mcpguard.evaluation import load_results, save_results
+
+        if load_results() is None:
+            save_results({**data["eval"], "generated_at": now - 3600})
     log.info("seeded %d demo scans", len(data.get("scans", [])))
     return True

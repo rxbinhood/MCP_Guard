@@ -1,0 +1,43 @@
+# MCPGuard: `docker compose up --build`, then open http://localhost:8000
+#
+# AI judge: export OPENAI_API_KEY before starting (or set MCPGUARD_LLM_BASE_URL to any
+# OpenAI-compatible endpoint, e.g. a local Ollama at http://host.docker.internal:11434/v1).
+# Without a key everything still works with rule-based description analysis.
+#
+# Optional Prompt Guard 2 classifier (gated model: needs HF_TOKEN with access granted):
+#   MCPGUARD_PROMPTGUARD_URL=http://promptguard:8001 docker compose --profile promptguard up --build
+
+services:
+  mcpguard:
+    build: .
+    image: mcpguard:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      # Lets MCPGuard build/run each scanned server in its own sandbox container on the host
+      # daemon. Note: access to the Docker socket is root-equivalent on the host.
+      - /var/run/docker.sock:/var/run/docker.sock
+      - mcpguard-data:/data
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      MCPGUARD_LLM_BASE_URL: ${MCPGUARD_LLM_BASE_URL:-https://api.openai.com/v1}
+      MCPGUARD_LLM_MODEL: ${MCPGUARD_LLM_MODEL:-gpt-4.1-mini}
+      MCPGUARD_PROMPTGUARD_URL: ${MCPGUARD_PROMPTGUARD_URL:-}
+      MCPGUARD_SANDBOX: ${MCPGUARD_SANDBOX:-auto}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  promptguard:
+    profiles: ["promptguard"]
+    build: ./services/promptguard
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
+      PROMPTGUARD_MODEL: ${PROMPTGUARD_MODEL:-meta-llama/Llama-Prompt-Guard-2-86M}
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+    restart: unless-stopped
+
+volumes:
+  mcpguard-data:
+  hf-cache:

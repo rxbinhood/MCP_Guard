@@ -1,7 +1,7 @@
 // Dashboard charts. Severity colors come from the validated --sev-* tokens; every chart has
 // a legend with icons + counts (identity never relies on color alone) and a hover tooltip.
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { SEVERITY_META } from "@/components/severity";
+import { SEVERITY_META } from "@/lib/severity";
 import { SEVERITIES, type Counts, type Severity } from "@/lib/types";
 
 const AXIS = { fontSize: 11, fill: "var(--muted-foreground)" };

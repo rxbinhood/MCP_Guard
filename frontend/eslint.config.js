@@ -25,4 +25,9 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // shadcn/ui generated files export variants next to components; main.tsx is the entry point.
+    files: ['src/components/ui/**', 'src/main.tsx', 'src/lib/theme.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
 )

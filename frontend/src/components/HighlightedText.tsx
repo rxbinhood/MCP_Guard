@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 // Invisible / direction-override characters are rendered as visible tokens so hidden
 // payloads are obvious to the reviewer.
-const INVISIBLE = /[​-‏⁠-⁤﻿‪-‮⁦-⁩]|[\u{E0000}-\u{E007F}]/gu;
+const INVISIBLE = new RegExp("[\\u200B-\\u200F\\u2060-\\u2064\\uFEFF\\u202A-\\u202E\\u2066-\\u2069]|[\\u{E0000}-\\u{E007F}]", "gu");
 
 function revealInvisible(text: string): (string | { hidden: string })[] {
   const out: (string | { hidden: string })[] = [];
