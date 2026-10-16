@@ -50,17 +50,24 @@ def dedupe(findings: list[Finding]) -> list[Finding]:
 def correlate(findings: list[Finding]) -> list[Finding]:
     """Boost confidence when static/description evidence is confirmed by dynamic probing."""
     dynamic = [f for f in findings if f.source == Source.DYNAMIC]
+    boosted: set[int] = set()
     for d in dynamic:
         related_cats = _CORROBORATES.get(d.category, set())
         for s in findings:
-            if s.source in (Source.STATIC, Source.DESCRIPTION) and s.category in related_cats:
-                same_tool = s.tool is None or d.tool is None or s.tool == d.tool
-                if same_tool:
-                    s.confidence = round(min(0.99, s.confidence + 0.15), 3)
-                    s.extra["confirmed_by"] = sorted(set(s.extra.get("confirmed_by", [])) | {d.id or d.title})
-                    if "dynamic" not in s.detectors:
-                        s.detectors.append("dynamic")
-                    d.confidence = round(min(0.99, d.confidence + 0.1), 3)
+            if s.source not in (Source.STATIC, Source.DESCRIPTION) or s.severity.rank < Severity.MEDIUM.rank:
+                continue
+            if s.tool and d.tool:
+                match = s.tool == d.tool and s.category in related_cats
+            else:  # file-level static finding: only an exact category match counts
+                match = s.category == d.category
+            if not match:
+                continue
+            s.extra["confirmed_by"] = sorted(set(s.extra.get("confirmed_by", [])) | {d.id or d.title})
+            if "dynamic" not in s.detectors:
+                s.detectors.append("dynamic")
+            if id(s) not in boosted:  # boost each corroborated finding once
+                boosted.add(id(s))
+                s.confidence = round(min(0.99, s.confidence + 0.15), 3)
     return findings
 
 
