@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Security auditor for MCP (Model Context Protocol) servers: tool poisoning, vulnerable code, and rug-pull detection with an AI description judge."
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [{ name = "MCPGuard contributors" }]
 dependencies = [
   "mcp>=1.9,<2",
@@ -36,7 +36,7 @@ packages = ["mcpguard"]
 
 [tool.ruff]
 line-length = 110
-target-version = "py310"
+target-version = "py311"
 extend-exclude = ["frontend", "test_servers/*/node_modules"]
 
 [tool.ruff.lint]

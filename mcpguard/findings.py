@@ -7,13 +7,13 @@ treat them uniformly.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class Severity(str, Enum):
+class Severity(StrEnum):
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
@@ -31,7 +31,7 @@ class Severity(str, Enum):
         return order[max(0, min(len(order) - 1, self.rank + steps))]
 
 
-class Category(str, Enum):
+class Category(StrEnum):
     TOOL_POISONING = "tool_poisoning"
     COMMAND_INJECTION = "command_injection"
     UNSAFE_DESERIALIZATION = "unsafe_deserialization"
@@ -42,7 +42,7 @@ class Category(str, Enum):
     RUG_PULL = "rug_pull"
 
 
-class Source(str, Enum):
+class Source(StrEnum):
     STATIC = "static"
     DESCRIPTION = "description"
     DYNAMIC = "dynamic"
@@ -206,7 +206,7 @@ class Manifest(BaseModel):
         return next((t for t in self.tools if t.name == name), None)
 
 
-class Verdict(str, Enum):
+class Verdict(StrEnum):
     PASS = "PASS"
     WARN = "WARN"
     FAIL = "FAIL"
