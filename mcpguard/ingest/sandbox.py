@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import re
 import shutil
 import subprocess
 from collections.abc import Callable
@@ -78,6 +79,16 @@ HARDENING = [
 
 class SandboxError(RuntimeError):
     pass
+
+
+_BUILD_STEP = re.compile(r"^#\d+ \[(\d+/\d+|\w+ \d+/\d+)\] (?!FROM)|ERROR|error:", re.I)
+
+
+def _build_log(log: Log | None) -> Log | None:
+    """Only forward build step headers and errors; full BuildKit output is too noisy for the UI."""
+    if log is None:
+        return None
+    return lambda line: log(f"docker build {line.split('] ', 1)[-1][:160]}") if _BUILD_STEP.search(line) else None
 
 
 @lru_cache(maxsize=1)
@@ -150,7 +161,7 @@ async def ensure_runner(language: str, log: Log | None = None) -> str:
         if log:
             log(f"Building base sandbox image {tag} (first run only)...")
         code, out = await _run(["docker", "build", "--progress=plain", "-t", tag, "-"],
-                               stdin=RUNNER_DOCKERFILE[language], log=log)
+                               stdin=RUNNER_DOCKERFILE[language], log=_build_log(log))
         if code != 0:
             raise SandboxError(f"failed to build runner image: {out[-500:]}")
     return tag
@@ -166,7 +177,7 @@ async def build_target(project: Project, log: Log | None = None, extra: str = ""
     if log:
         log(f"Building sandbox image {tag} from {project.root.name}/")
     code, out = await _run(["docker", "build", "--progress=plain", "-t", tag, "-f", "-", str(project.root)],
-                           stdin=dockerfile, log=log)
+                           stdin=dockerfile, log=_build_log(log))
     if code != 0:
         raise SandboxError(f"docker build failed: {out[-800:]}")
     return tag

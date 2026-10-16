@@ -1,0 +1,38 @@
+# MCPGuard custom Semgrep rules for JavaScript/TypeScript MCP servers.
+rules:
+  - id: mcp-js-child-process-exec
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: child_process.exec with a dynamically built command string.
+    metadata:
+      mcpguard_category: command_injection
+      mcpguard_severity: HIGH
+      cwe: "CWE-78: OS Command Injection"
+      fix: Use execFile/spawn with an argument array and shell disabled; validate inputs.
+    patterns:
+      - pattern-either:
+          - pattern: $CP.exec($CMD, ...)
+          - pattern: $CP.execSync($CMD, ...)
+          - pattern: exec($CMD, ...)
+          - pattern: execSync($CMD, ...)
+      - pattern-not: $CP.exec("...", ...)
+      - pattern-not: $CP.execSync("...", ...)
+      - pattern-not: exec("...", ...)
+      - pattern-not: execSync("...", ...)
+
+  - id: mcp-js-eval
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Dynamic code evaluation (eval / new Function / vm).
+    metadata:
+      mcpguard_category: unsafe_deserialization
+      mcpguard_severity: HIGH
+      cwe: "CWE-95: Eval Injection"
+      fix: Never evaluate tool input; use JSON.parse or a safe parser.
+    pattern-either:
+      - patterns:
+          - pattern: eval($X)
+          - pattern-not: eval("...")
+      - pattern: new Function(...)
+      - pattern: vm.runInNewContext(...)
+      - pattern: vm.runInThisContext(...)

@@ -1,0 +1,169 @@
+# MCPGuard custom Semgrep rules for Python MCP servers.
+# metadata.mcpguard_category / mcpguard_severity map results into the MCPGuard findings schema.
+rules:
+  - id: mcp-tool-input-to-shell
+    languages: [python]
+    severity: ERROR
+    message: >-
+      MCP tool parameter '$P' reaches a shell command. The LLM chooses tool arguments, so a manipulated
+      agent (or anyone who can influence its context) can run arbitrary commands.
+    metadata:
+      mcpguard_category: command_injection
+      mcpguard_severity: CRITICAL
+      cwe: "CWE-78: OS Command Injection"
+      fix: Pass arguments as a list without shell=True and validate them against an allowlist.
+    mode: taint
+    pattern-sources:
+      - patterns:
+          - pattern-inside: |
+              @$MCP.tool(...)
+              def $F(..., $P, ...):
+                ...
+          - focus-metavariable: $P
+          - pattern: $P
+    pattern-sinks:
+      - pattern: subprocess.$FN($CMD, ..., shell=True, ...)
+      - pattern: os.system($CMD)
+      - pattern: os.popen($CMD, ...)
+    pattern-sanitizers:
+      - pattern: shlex.quote(...)
+
+  - id: mcp-subprocess-shell-true
+    languages: [python]
+    severity: WARNING
+    message: subprocess call with shell=True and a non-literal command.
+    metadata:
+      mcpguard_category: command_injection
+      mcpguard_severity: HIGH
+      cwe: "CWE-78: OS Command Injection"
+      fix: Use subprocess.run([...]) with an argument list and shell=False.
+    patterns:
+      - pattern: subprocess.$FN($CMD, ..., shell=True, ...)
+      - pattern-not: subprocess.$FN("...", ..., shell=True, ...)
+
+  - id: mcp-tool-input-to-eval
+    languages: [python]
+    severity: ERROR
+    message: MCP tool parameter '$P' is evaluated as code.
+    metadata:
+      mcpguard_category: unsafe_deserialization
+      mcpguard_severity: CRITICAL
+      cwe: "CWE-95: Eval Injection"
+      fix: Never eval tool input; use ast.literal_eval, json, or a whitelisted parser.
+    mode: taint
+    pattern-sources:
+      - patterns:
+          - pattern-inside: |
+              @$MCP.tool(...)
+              def $F(..., $P, ...):
+                ...
+          - focus-metavariable: $P
+          - pattern: $P
+    pattern-sinks:
+      - pattern: eval(...)
+      - pattern: exec(...)
+      - pattern: compile(...)
+
+  - id: mcp-pickle-deserialization
+    languages: [python]
+    severity: ERROR
+    message: pickle/marshal/dill deserialization can execute arbitrary code.
+    metadata:
+      mcpguard_category: unsafe_deserialization
+      mcpguard_severity: HIGH
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+      fix: Use JSON (validated with a schema) instead of pickle for data from tool calls.
+    pattern-either:
+      - pattern: pickle.loads(...)
+      - pattern: pickle.load(...)
+      - pattern: dill.loads(...)
+      - pattern: marshal.loads(...)
+      - pattern: jsonpickle.decode(...)
+
+  - id: mcp-yaml-unsafe-load
+    languages: [python]
+    severity: ERROR
+    message: yaml.load without a safe loader can construct arbitrary Python objects.
+    metadata:
+      mcpguard_category: unsafe_deserialization
+      mcpguard_severity: HIGH
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+      fix: Use yaml.safe_load().
+    pattern-either:
+      - patterns:
+          - pattern: yaml.load(...)
+          - pattern-not: yaml.load(..., Loader=yaml.SafeLoader, ...)
+          - pattern-not: yaml.load(..., Loader=yaml.CSafeLoader, ...)
+      - pattern: yaml.unsafe_load(...)
+
+  - id: mcp-sensitive-file-access
+    languages: [python]
+    severity: ERROR
+    message: Code references a credential file ('$PATH'). MCP servers rarely need SSH keys or cloud credentials.
+    metadata:
+      mcpguard_category: exfiltration
+      mcpguard_severity: HIGH
+      cwe: "CWE-200: Exposure of Sensitive Information"
+      fix: Remove access to credential stores; if truly required, document it in the tool description and ask the user.
+    patterns:
+      - pattern: '"$PATH"'
+      - metavariable-regex:
+          metavariable: $PATH
+          regex: (^|/)(\.ssh|id_rsa|id_ed25519|id_ecdsa|\.aws/credentials|\.git-credentials|\.npmrc|\.pypirc|\.netrc|\.kube/config|\.docker/config\.json)($|/)
+
+  - id: mcp-tool-unrestricted-file-read
+    languages: [python]
+    severity: WARNING
+    message: MCP tool parameter '$P' is used directly as a file path (path traversal / arbitrary file read).
+    metadata:
+      mcpguard_category: excess_access
+      mcpguard_severity: HIGH
+      cwe: "CWE-22: Path Traversal"
+      fix: Resolve the path and check it stays inside an allowed base directory (Path.resolve().is_relative_to(base)).
+    patterns:
+      - pattern-inside: |
+          @$MCP.tool(...)
+          def $F(..., $P, ...):
+            ...
+      - pattern-either:
+          - pattern: open($P, ...)
+          - pattern: pathlib.Path($P).read_text(...)
+          - pattern: Path($P).read_text(...)
+          - pattern: Path($P).read_bytes(...)
+
+  - id: mcp-tls-verify-disabled
+    languages: [python]
+    severity: WARNING
+    message: TLS certificate verification is disabled for outbound requests.
+    metadata:
+      mcpguard_category: excess_access
+      mcpguard_severity: MEDIUM
+      cwe: "CWE-295: Improper Certificate Validation"
+      fix: Remove verify=False.
+    pattern-either:
+      - pattern: requests.$M(..., verify=False, ...)
+      - pattern: httpx.$M(..., verify=False, ...)
+      - pattern: httpx.Client(..., verify=False, ...)
+
+  - id: mcp-hardcoded-exfil-endpoint
+    languages: [python]
+    severity: WARNING
+    message: Data is POSTed to a hardcoded endpoint '$URL'; check that this is disclosed in the tool description.
+    metadata:
+      mcpguard_category: exfiltration
+      mcpguard_severity: MEDIUM
+      cwe: "CWE-201: Insertion of Sensitive Information Into Sent Data"
+      fix: Document every outbound destination in the tool description, or remove the call.
+    patterns:
+      - pattern-either:
+          - pattern: requests.post("$URL", ...)
+          - pattern: httpx.post("$URL", ...)
+          - pattern: urllib.request.Request("$URL", ..., data=$D, ...)
+          - patterns:
+              - pattern-inside: |
+                  $V = "$URL"
+                  ...
+              - pattern: urllib.request.Request($V, ..., data=$D, ...)
+      - metavariable-regex:
+          metavariable: $URL
+          regex: ^https?://
