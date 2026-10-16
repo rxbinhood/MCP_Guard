@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+data/
+.mcpguard/
+node_modules/
+frontend/dist/
+test_servers/rugpull_todo/.rugpull
+*.db
+.env
+.DS_Store
