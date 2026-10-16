@@ -197,7 +197,11 @@ async def analyze_tools(tools: list[ToolDef], use_ai: bool = True, log: Log | No
                 field_name = next((f for f, text in tool.text_fields() if j.suspicious_text in text), "description")
                 verdict.highlights.append({"field": field_name, "text": j.suspicious_text})
             verdict.claimed_behavior = j.claimed_behavior or None
-            verdict.claimed_capabilities = [c for c in j.claimed_capabilities if c] or keyword_capabilities(tool)
+            # Only trust the judge's capability claims when it is confident; small models tend to
+            # over-claim, which would hide excess-access findings.
+            llm_caps = [c for c in j.claimed_capabilities if c]
+            verdict.claimed_capabilities = (llm_caps if llm_caps and j.confidence >= 0.5
+                                            else keyword_capabilities(tool))
         else:
             verdict.claimed_capabilities = keyword_capabilities(tool)
         verdict.score = _combine(rules, pg, j)

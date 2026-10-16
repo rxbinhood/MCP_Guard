@@ -18,8 +18,8 @@ sys.path.insert(0, str(ROOT))
 
 from mcpguard.evaluation import evaluate_servers  # noqa: E402
 from mcpguard.findings import Manifest  # noqa: E402
-from mcpguard.ingest.sandbox import docker_status  # noqa: E402
 from mcpguard.ingest.manifest import fetch_manifest  # noqa: E402
+from mcpguard.ingest.sandbox import docker_status  # noqa: E402
 from mcpguard.ingest.source import resolve  # noqa: E402
 from mcpguard.pin_diff.canonical import fingerprint  # noqa: E402
 from mcpguard.pipeline import ScanOptions, run_scan  # noqa: E402
