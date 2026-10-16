@@ -67,7 +67,7 @@ def render_sarif(result: ScanResult) -> str:
         "version": "2.1.0",
         "runs": [{
             "tool": {"driver": {"name": "MCPGuard", "version": __version__, "semanticVersion": __version__,
-                                "informationUri": "https://github.com/", "rules": list(rules.values())}},
+                                "informationUri": "https://github.com/Robinaditya1045/mcpguard", "rules": list(rules.values())}},
             "originalUriBaseIds": {"SRCROOT": {"description": {"text": "Root of the scanned MCP server"}}},
             "results": results,
             "properties": {"target": result.target, "verdict": result.verdict.value,
