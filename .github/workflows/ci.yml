@@ -8,6 +8,10 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -16,7 +20,7 @@ jobs:
       - run: .venv/bin/pytest -q
       # Dogfood: audit a bundled server and upload SARIF to GitHub code scanning.
       - run: .venv/bin/mcpguard scan test_servers/poisoned_weather --sandbox static --no-ai --report sarif --output mcpguard.sarif --fail-on never
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@v4
         if: github.event_name == 'push'
         with:
           sarif_file: mcpguard.sarif
