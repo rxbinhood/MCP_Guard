@@ -1,0 +1,231 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------------
+   MCPGuard design tokens.
+   Dark (default): deep navy background, navy surfaces, teal primary, indigo secondary.
+   All text/background pairs meet WCAG AA.
+   --------------------------------------------------------------------------- */
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Brand + semantic */
+  --color-teal: var(--teal);
+  --color-indigo: var(--indigo);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-surface-2: var(--surface-2);
+
+  /* Severity scale (always paired with an icon + label, never color alone) */
+  --color-sev-critical: var(--sev-critical);
+  --color-sev-high: var(--sev-high);
+  --color-sev-medium: var(--sev-medium);
+  --color-sev-low: var(--sev-low);
+  --color-sev-info: var(--sev-info);
+  --color-sev-critical-fg: var(--sev-critical-fg);
+  --color-sev-high-fg: var(--sev-high-fg);
+  --color-sev-medium-fg: var(--sev-medium-fg);
+  --color-sev-low-fg: var(--sev-low-fg);
+  --color-sev-info-fg: var(--sev-info-fg);
+
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.25);
+  --radius-2xl: calc(var(--radius) * 1.5);
+  --radius-3xl: calc(var(--radius) * 2);
+  --radius-4xl: calc(var(--radius) * 2.5);
+}
+
+:root {
+  /* Light theme */
+  --radius: 0.75rem;
+  --background: #f6f8fb;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --surface-2: #eef2f7;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #0d9488;
+  --primary-foreground: #ffffff;
+  --secondary: #eef2ff;
+  --secondary-foreground: #3730a3;
+  --muted: #eef2f7;
+  --muted-foreground: #475569;
+  --accent: #e6f7f5;
+  --accent-foreground: #0f766e;
+  --destructive: #dc2626;
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --ring: #14b8a6;
+
+  --teal: #0d9488;
+  --indigo: #4f46e5;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+
+  /* Severity fills, validated with the dataviz palette checker (CVD + normal-vision separation).
+     Contrast of medium/info fills is < 3:1 on white, so charts always carry labels + a table view. */
+  --sev-critical: #9f1239;
+  --sev-high: #ea580c;
+  --sev-medium: #d4a017;
+  --sev-low: #0369a1;
+  --sev-info: #94a3b8;
+  /* Severity text (AA on light surfaces) */
+  --sev-critical-fg: #9f1239;
+  --sev-high-fg: #c2410c;
+  --sev-medium-fg: #a16207;
+  --sev-low-fg: #0369a1;
+  --sev-info-fg: #475569;
+
+  --chart-1: #0d9488;
+  --chart-2: #4f46e5;
+  --chart-3: #d97706;
+  --chart-4: #dc2626;
+  --chart-5: #16a34a;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-accent: #eef2f7;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-primary: #0d9488;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-ring: #14b8a6;
+}
+
+.dark {
+  --background: #0b1220;
+  --foreground: #e2e8f0;
+  --card: #16213a;
+  --card-foreground: #e2e8f0;
+  --surface-2: #1c2a47;
+  --popover: #16213a;
+  --popover-foreground: #e2e8f0;
+  --primary: #14b8a6;
+  --primary-foreground: #04201d;
+  --secondary: #1e2550;
+  --secondary-foreground: #c7d2fe;
+  --muted: #1c2a47;
+  --muted-foreground: #94a3b8;
+  --accent: #123a3c;
+  --accent-foreground: #5eead4;
+  --destructive: #ef4444;
+  --border: #23314f;
+  --input: #2b3b5e;
+  --ring: #14b8a6;
+
+  --teal: #14b8a6;
+  --indigo: #6366f1;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  /* Severity fills, validated against the #16213a card surface. INFO is intentionally neutral. */
+  --sev-critical: #e11d48;
+  --sev-high: #fb923c;
+  --sev-medium: #fde68a;
+  --sev-low: #38bdf8;
+  --sev-info: #cbd5e1;
+  /* Severity text (AA on dark surfaces) */
+  --sev-critical-fg: #fb7185;
+  --sev-high-fg: #fdba74;
+  --sev-medium-fg: #fde68a;
+  --sev-low-fg: #7dd3fc;
+  --sev-info-fg: #cbd5e1;
+
+  --chart-1: #14b8a6;
+  --chart-2: #6366f1;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #22c55e;
+
+  --sidebar: #0e1729;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-border: #1c2945;
+  --sidebar-accent: #16213a;
+  --sidebar-accent-foreground: #f1f5f9;
+  --sidebar-primary: #14b8a6;
+  --sidebar-primary-foreground: #04201d;
+  --sidebar-ring: #14b8a6;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  code,
+  kbd,
+  pre,
+  .font-mono {
+    font-feature-settings: "calt" 0;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--teal) 35%, transparent);
+  }
+}
+
+@layer utilities {
+  .card-surface {
+    @apply rounded-xl border bg-card text-card-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06),0_8px_24px_-12px_rgba(0,0,0,0.25)];
+  }
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--border) 55%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--border) 55%, transparent) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--input) transparent;
+  }
+}
